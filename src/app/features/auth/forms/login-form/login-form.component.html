@@ -1,0 +1,45 @@
+<form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="flex flex-col space-y-4">
+  <div>
+    <input formControlName="email" type="email" placeholder="Email" class="p-2 border rounded w-full"
+      [attr.aria-invalid]="loginForm.controls['email'].invalid"
+      [attr.aria-describedby]="loginForm.controls['email'].invalid ? 'email-error' : null" />
+    <div *ngIf="loginForm.controls['email'].touched && loginForm.controls['email'].invalid">
+      <p *ngIf="loginForm.controls['email'].hasError('required')" class="text-red-500 text-xs">
+        Email is required
+      </p>
+      <p *ngIf="loginForm.controls['email'].hasError('email')" class="text-red-500 text-xs">
+        Enter a valid email
+      </p>
+    </div>
+  </div>
+
+  <div>
+    <div class="relative">
+      <input formControlName="password" placeholder="Enter password" [type]="showPassword() ? 'text' : 'password'"
+        class="w-full rounded bg-gray-100 border-gray-300 border-2 p-2" />
+      <button type="button" class="p-2 absolute right-2" (click)="showPassword.set(!showPassword())">
+        <img
+          [src]="showPassword() ? 'https://img.icons8.com/?size=100&id=85028&format=png&color=000000' : 'https://img.icons8.com/?size=100&id=22021&format=png&color=000000 '"
+          alt="Toggle Password Visibility" class="w-6 h-6" />
+      </button>
+    </div>
+    <div *ngIf="loginForm.controls['password'].touched && loginForm.controls['password'].invalid">
+      <p *ngIf="loginForm.controls['password'].hasError('required')" class="font-medium text-red-500 text-xs mt-1 ml-1">
+        This field is mandatory
+      </p>
+      <p *ngIf="loginForm.controls['password'].hasError('minlength')"
+        class="font-medium text-red-500 text-xs mt-1 ml-1">
+        Password must be at least 8 characters
+      </p>
+    </div>
+  </div>
+
+  <div *ngIf="status() === AuthStatus.Failed" class="text-red-500 text-xs">
+    Invalid credentials. Please try again.
+  </div>
+
+  <button type="submit" [disabled]="status() === AuthStatus.Loading" class="bg-blue-500 disabled:bg-blue-300 text-white p-2 rounded">
+    <ng-container *ngIf="status() === AuthStatus.Loading; else loginText">Loading...</ng-container>
+    <ng-template #loginText>Login</ng-template>
+  </button>
+</form>
