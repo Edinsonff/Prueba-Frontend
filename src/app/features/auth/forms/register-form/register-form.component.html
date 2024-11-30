@@ -1,0 +1,150 @@
+<!-- Formulario de validación de usuario -->
+<div *ngIf="!showRegister()" class="bg-white rounded-lg p-6">
+  <h1 class="text-center font-bold py-2 text-gray-700">Enter your data</h1>
+  <form [formGroup]="formUser" novalidate class="space-y-4" (ngSubmit)="validateUser()">
+    <div>
+      <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+      <div class="relative">
+        <input id="email" formControlName="email" placeholder="example@mail.com" type="email" name="email"
+          class="w-full rounded bg-gray-100 border-gray-300 border-2 p-2 focus:ring focus:ring-blue-500" />
+      </div>
+      <div *ngIf="formUser.controls['email'].touched && formUser.controls['email'].invalid">
+        <p *ngIf="formUser.controls['email'].hasError('required')" class="text-red-500 text-xs mt-1 ml-1">
+          This field is mandatory
+        </p>
+        <p *ngIf="formUser.controls['email'].hasError('email')" class="text-red-500 text-xs mt-1 ml-1">
+          Enter a valid email
+        </p>
+        <p *ngIf="formUser.controls['email'].hasError('email')" class="text-red-500 text-xs mt-1 ml-1">
+          This field should be a valid email
+        </p>
+      </div>
+    </div>
+    <div>
+      <button type="submit" class="bg-blue-500 text-white p-2 rounded w-full focus:ring focus:ring-blue-500">
+        <ng-container *ngIf="status() === AuthStatus.Loading; else continueText">Loading...</ng-container>
+        <ng-template #continueText>Continue</ng-template>
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Formulario de registro -->
+<div *ngIf="showRegister()" class="bg-white rounded-lg p-6">
+  <h1 class="text-center font-bold py-2 text-gray-700">Register</h1>
+  <form [formGroup]="form" novalidate class="space-y-4" (ngSubmit)="register()">
+    <!-- Nombre -->
+    <div>
+      <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+      <div class="relative">
+        <input id="name" formControlName="name" placeholder="Enter your name" type="text" name="name"
+          class="w-full rounded bg-gray-100 border-gray-300 border-2 p-2 focus:ring focus:ring-blue-500" />
+      </div>
+      <div *ngIf="form.controls['name'].touched && form.controls['name'].invalid">
+        <p *ngIf="form.controls['name'].hasError('required')" class="text-red-500 text-xs mt-1 ml-1">
+          Name is required
+        </p>
+        <p *ngIf="form.controls['name'].hasError('required')" class="text-red-500 text-xs mt-1 ml-1">
+          Name cannot be only whitespace
+        </p>
+
+      </div>
+    </div>
+
+    <!-- Email -->
+    <div>
+      <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+      <div class="relative">
+        <input id="email" formControlName="email" placeholder="Enter email" type="email" name="email"
+          class="w-full rounded bg-gray-100 border-gray-300 border-2 p-2 focus:ring focus:ring-blue-500" />
+      </div>
+      <div *ngIf="form.controls['email'].touched && form.controls['email'].invalid">
+        <p *ngIf="form.controls['email'].hasError('required')" class="text-red-500 text-xs mt-1 ml-1">
+          Email is required
+        </p>
+        <p *ngIf="form.controls['email'].hasError('email')" class="text-red-500 text-xs mt-1 ml-1">
+          Enter a valid email
+        </p>
+      </div>
+    </div>
+
+    <!-- Contraseña -->
+    <div>
+      <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+      <div class="relative">
+        <input id="password" formControlName="password" placeholder="Enter password" [type]="showPassword() ? 'text' : 'password'"
+          class="w-full rounded bg-gray-100 border-gray-300 border-2 p-2 focus:ring focus:ring-blue-500" />
+        <button type="button" aria-label="Toggle Password Visibility" class="absolute right-2 top-2"
+          (click)="showPassword.set(!showPassword())">
+          <img [src]="showPassword() ? 'https://img.icons8.com/?size=100&id=85028&format=png&color=000000' : 'https://img.icons8.com/?size=100&id=22021&format=png&color=000000 '"
+            alt="Toggle Password Visibility" class="w-6 h-6" />
+        </button>
+      </div>
+      <div *ngIf="form.controls['password'].touched && form.controls['password'].invalid">
+        <p *ngIf="form.controls['password'].hasError('required')" class="text-red-500 text-xs mt-1 ml-1">
+          Password is required
+        </p>
+        <p *ngIf="form.controls['password'].hasError('minlength')" class="text-red-500 text-xs mt-1 ml-1">
+          Password must be at least 8 characters
+        </p>
+        <p *ngIf="form.controls['password'].hasError('lenMaxMin')" class="text-red-500 text-xs mt-1 ml-1">
+          Password must be between 8 and 16 characters
+        </p>
+        <p *ngIf="form.controls['password'].hasError('hasNumber')" class="text-red-500 text-xs mt-1 ml-1">
+          Password must contain at least one number
+        </p>
+        <p *ngIf="form.controls['password'].hasError('hasUpper')" class="text-red-500 text-xs mt-1 ml-1">
+          Password must contain at least one uppercase letter
+        </p>
+        <p *ngIf="form.controls['password'].hasError('hasLower')" class="text-red-500 text-xs mt-1 ml-1">
+          Password must contain at least one lowercase letter
+        </p>
+        <p *ngIf="form.controls['password'].hasError('hasSpecial')" class="text-red-500 text-xs mt-1 ml-1">
+          Password must contain at least one special character
+        </p>
+      </div>
+    </div>
+
+    <!-- Confirmar contraseña -->
+    <div>
+      <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+      <div class="relative">
+        <input id="confirmPassword" formControlName="confirmPassword" placeholder="Confirm password" type="password"
+          class="w-full rounded bg-gray-100 border-gray-300 border-2 p-2 focus:ring focus:ring-blue-500" />
+      </div>
+      <div *ngIf="form.controls['confirmPassword'].touched && form.controls['confirmPassword'].invalid">
+        <p *ngIf="form.controls['confirmPassword'].hasError('required')" class="text-red-500 text-xs mt-1 ml-1">
+          Confirming password is required
+        </p>
+      </div>
+      <div *ngIf="form.hasError('mismatch')" class="text-red-500 text-xs">
+        Passwords do not match
+      </div>
+    </div>
+
+    <!-- Género -->
+    <div class="flex items-center">
+      <input id="male" type="radio" formControlName="gender" value="male" class="mr-2" />
+      <label for="male" class="text-sm font-medium text-gray-700">Male</label>
+      <input id="female" type="radio" formControlName="gender" value="female" class="ml-4 mr-2" />
+      <label for="female" class="text-sm font-medium text-gray-700">Female</label>
+    </div>
+
+    <!-- Aceptar términos -->
+    <div>
+      <input id="agreeTerms" type="checkbox" formControlName="agreeTerms" class="mr-2" />
+      <label for="agreeTerms" class="text-sm font-medium text-gray-700">I agree to terms and conditions</label>
+      <div *ngIf="form.controls['agreeTerms'].touched && form.controls['agreeTerms'].invalid" class="text-red-500 text-xs">
+        You must agree to the terms
+      </div>
+    </div>
+
+    <!-- Botón de registro -->
+    <div>
+      <button type="submit" [disabled]="status() === AuthStatus.Loading" class="bg-blue-500 text-white p-2 rounded w-full focus:ring focus:ring-blue-500">
+        <ng-container *ngIf="status() === AuthStatus.Loading; else registerText">Loading...</ng-container>
+        <ng-template #registerText>Register</ng-template>
+      </button>
+    </div>
+  </form>
+</div>
