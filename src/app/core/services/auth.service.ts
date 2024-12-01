@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal, computed } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { delay, map } from 'rxjs';
 import { User } from '@app/shared/utils/user.model';
@@ -7,25 +7,37 @@ import { User } from '@app/shared/utils/user.model';
   providedIn: 'root',
 })
 export class AuthService {
-
   private readonly USER_KEY = 'user';
   private readonly AUTH_KEY = 'auth';
 
-  private mockUserData = {
+  private mockUserData: User = {
     email: 'test@example.com',
     password: 'password123',
     name: 'Test User',
   };
 
-  private loggedInUser: User | null = null;
+  user = signal<User | null>(null);
+  isAuthenticated = computed(() => !!this.user());
 
   constructor() {
+    this.initializeMockUser();
+  }
+
+  private initializeMockUser(): void {
     if (this.isBrowser()) {
       const savedUser = localStorage.getItem(this.USER_KEY);
-      if (savedUser) {
-        this.loggedInUser = JSON.parse(savedUser);
+
+      if (!savedUser) {
+        localStorage.setItem(this.USER_KEY, JSON.stringify(this.mockUserData));
+      }
+
+      this.user.set(JSON.parse(savedUser || JSON.stringify(this.mockUserData)));
+
+      const authStatus = localStorage.getItem(this.AUTH_KEY) === 'true';
+      if (authStatus) {
+        this.user.set(this.getSavedUser());
       } else {
-        this.loggedInUser = this.mockUserData;
+        this.user.set(null);
       }
     }
   }
@@ -38,53 +50,50 @@ export class AuthService {
     return of({ email, password }).pipe(
       delay(1000),
       map((credentials) => {
-        let savedUser = this.getSavedUser();
+        const savedUser = this.getSavedUser();
 
         if (!savedUser) {
-          savedUser = this.mockUserData;
-          localStorage.setItem(this.USER_KEY, JSON.stringify(this.mockUserData));
+          throw new Error('No user found.');
         }
 
-        const isAuthenticated = credentials.email === savedUser.email && credentials.password === savedUser.password;
+        const isAuthenticated =
+          credentials.email === savedUser.email && credentials.password === savedUser.password;
 
         if (isAuthenticated) {
-          this.loggedInUser = savedUser;
-          localStorage.setItem(this.AUTH_KEY, 'true');
+          this.setSession(savedUser);
+          return true;
         }
 
-        return isAuthenticated;
+        throw new Error('Invalid credentials.');
       })
     );
   }
 
   register(name: string, email: string, password: string): Observable<boolean> {
+    if (!this.isValidEmail(email)) {
+      throw new Error('Invalid email format.');
+    }
+
+    if (password.length < 8) {
+      throw new Error('Password must be at least 8 characters long.');
+    }
+
     return of(true).pipe(
       delay(1000),
       map(() => {
         const newUser = { name, email, password };
-        this.loggedInUser = newUser;
-        if (this.isBrowser()) {
-          localStorage.setItem(this.USER_KEY, JSON.stringify(newUser));
-          localStorage.setItem(this.AUTH_KEY, 'true');
-        }
+        this.setSession(newUser);
         return true;
       })
     );
   }
 
-  logout() {
+  logout(): void {
     if (this.isBrowser()) {
-      localStorage.setItem(this.AUTH_KEY, 'false');
+      localStorage.removeItem(this.AUTH_KEY);
+      localStorage.removeItem(this.USER_KEY);
     }
-    this.loggedInUser = null;
-  }
-
-  isLoggedIn(): boolean {
-    if (this.isBrowser()) {
-      const authStatus = localStorage.getItem(this.AUTH_KEY);
-      return authStatus === 'true';
-    }
-    return false;
+    this.user.set(null);
   }
 
   isAvailable(email: string): Observable<{ isAvailable: boolean }> {
@@ -92,11 +101,24 @@ export class AuthService {
     return of({ isAvailable }).pipe(delay(1000));
   }
 
-  private getSavedUser(): any {
+  private isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  private getSavedUser(): User | null {
     if (this.isBrowser()) {
       const savedUser = localStorage.getItem(this.USER_KEY);
-      return savedUser ? JSON.parse(savedUser) : this.mockUserData;
+      return savedUser ? JSON.parse(savedUser) : null;
     }
     return null;
+  }
+
+  private setSession(user: User): void {
+    if (this.isBrowser()) {
+      localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+      localStorage.setItem(this.AUTH_KEY, 'true');
+    }
+    this.user.set(user);
   }
 }
