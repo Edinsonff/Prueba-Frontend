@@ -11,7 +11,7 @@ import { ProductService } from '@app/core/services/product.service';
   standalone: true,
   imports: [ReactiveFormsModule, CommonModule],
   templateUrl: './product-form.component.html',
-  styleUrl: './product-form.component.scss',
+  styleUrls: ['./product-form.component.scss'],
 })
 export class ProductFormComponent implements OnInit {
   @Input() product: Product | null = null;
